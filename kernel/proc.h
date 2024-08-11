@@ -107,5 +107,6 @@ struct proc {
   char name[16];               // Process name (debugging)
   struct usyscall* u;
   
+  pagetable_t proc_pagetable;//内核页表
 
 };
