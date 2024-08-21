@@ -452,7 +452,7 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
 void
 u2k_pgtblcopy(pagetable_t pagetable, pagetable_t kernelpt, uint64 oldsz, uint64 newsz){
   pte_t *kpte, *upte;
-  //oldsz = PGROUNDUP(oldsz);
+  oldsz = PGROUNDUP(oldsz);
   for (uint64 i = oldsz; i < newsz; i += PGSIZE){
     if((upte = walk(pagetable, i, 0)) == 0)
       panic("u2k_pgtblcopy: src pte does not exist");
@@ -462,6 +462,6 @@ u2k_pgtblcopy(pagetable_t pagetable, pagetable_t kernelpt, uint64 oldsz, uint64 
     *kpte= *upte;
     *kpte&=~(PTE_U|PTE_X|PTE_W);
   }
-//*0x800020f2  switch的问题
+//*0x800020f2  switch的问题 userinit 忘记加了
   
 }
