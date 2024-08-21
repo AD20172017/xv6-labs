@@ -381,24 +381,29 @@ copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
 int
 copyin(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len)
 {
+  return copyin_new(pagetable,dst,srcva,len);
+
   uint64 n, va0, pa0;
 
   while(len > 0){
-    va0 = PGROUNDDOWN(srcva);
-    pa0 = walkaddr(pagetable, va0);
+    va0 = PGROUNDDOWN(srcva);//向下对齐(减少)到边界
+    pa0 = walkaddr(pagetable, va0);//物理地址
     if(pa0 == 0)
       return -1;
-    n = PGSIZE - (srcva - va0);
+    n = PGSIZE - (srcva - va0);//当前虚拟地址页面剩余的内存
     if(n > len)
       n = len;
     memmove(dst, (void *)(pa0 + (srcva - va0)), n);
 
+
     len -= n;
     dst += n;
-    srcva = va0 + PGSIZE;
+    srcva = va0 + PGSIZE;//下一个虚拟页面
   }
   return 0;
 }
+
+
 
 // Copy a null-terminated string from user to kernel.
 // Copy bytes to dst from virtual address srcva in a given page table,
@@ -407,6 +412,7 @@ copyin(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len)
 int
 copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
 {
+  return copyinstr_new(pagetable,dst,srcva,max);
   uint64 n, va0, pa0;
   int got_null = 0;
 
@@ -441,4 +447,21 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
   } else {
     return -1;
   }
+}
+
+void
+u2k_pgtblcopy(pagetable_t pagetable, pagetable_t kernelpt, uint64 oldsz, uint64 newsz){
+  pte_t *kpte, *upte;
+  //oldsz = PGROUNDUP(oldsz);
+  for (uint64 i = oldsz; i < newsz; i += PGSIZE){
+    if((upte = walk(pagetable, i, 0)) == 0)
+      panic("u2k_pgtblcopy: src pte does not exist");
+    if((kpte = walk(kernelpt, i, 1)) == 0)
+      panic("u2k_pgtblcopy: pte walk failed");
+    
+    *kpte= *upte;
+    *kpte&=~(PTE_U|PTE_X|PTE_W);
+  }
+//*0x800020f2  switch的问题
+  
 }

@@ -179,6 +179,13 @@ int             copyout(pagetable_t, uint64, char *, uint64);
 int             copyin(pagetable_t, char *, uint64, uint64);
 int             copyinstr(pagetable_t, char *, uint64, uint64);
 
+void
+u2k_pgtblcopy(pagetable_t pagetable, pagetable_t kernelpt, uint64 oldsz, uint64 newsz);
+
+int
+copyin_new(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len);
+int
+copyinstr_new(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max);
 // plic.c
 void            plicinit(void);
 void            plicinithart(void);
